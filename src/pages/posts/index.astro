@@ -1,0 +1,113 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts } from '../../lib/content';
+import { POST_CATEGORIES } from '../../data/categories';
+const posts = await getPosts();
+const tags = POST_CATEGORIES;
+const developmentSearch = import.meta.env.DEV ? posts.map(post => ({
+  url: `/posts/${post.id}/`,
+  text: `${post.data.title} ${post.data.description} ${post.body ?? ''}`,
+})) : [];
+---
+<Base title="Posts" description="개발하며 발견한 것들. 표상혁의 기술 기록을 모았습니다.">
+  <div class="page-heading posts-heading"><span class="eyebrow">THE ARCHIVE</span><h1>Posts<span class="accent">.</span></h1></div>
+  <form class="posts-search" role="search" aria-label="글 검색">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+    <input id="post-search" type="search" aria-label="글 검색" placeholder="제목이나 본문으로 글을 검색하세요" autocomplete="off" />
+    <button id="clear-search" type="button" aria-label="검색어 지우기" hidden>지우기</button>
+    <kbd aria-hidden="true">/</kbd>
+  </form>
+  <div class="posts-toolbar"><div class="tag-filters" role="group" aria-label="카테고리 필터"><button data-tag="" class="active" aria-pressed="true">전체 <span>{posts.length}</span></button>{tags.map(tag => <button data-tag={tag} aria-pressed="false">{tag}</button>)}</div></div>
+  <p id="search-status" class="posts-search-status" role="status" hidden></p>
+  <PostList posts={posts} />
+  <p id="empty-posts" class="empty-state" hidden>이 카테고리의 글은 아직 없습니다.</p>
+  <div class="pagination" aria-label="페이지 이동"><button id="previous-page" aria-label="이전 페이지">←</button><span id="page-status" aria-live="polite">1 / 1</span><button id="next-page" aria-label="다음 페이지">→</button></div>
+  <script id="development-search" type="application/json" set:html={JSON.stringify(developmentSearch).replaceAll('<', '\\u003c')} />
+  <script>
+    const rows = [...document.querySelectorAll<HTMLElement>('[data-post]')];
+    const filters = [...document.querySelectorAll<HTMLButtonElement>('[data-tag]')];
+    const size = 8;
+    let page = 1;
+    let activeTag = new URL(location.href).searchParams.get('tag') || '';
+    if (!filters.some(button => button.dataset.tag === activeTag)) activeTag = '';
+    const previous = document.querySelector<HTMLButtonElement>('#previous-page')!;
+    const next = document.querySelector<HTMLButtonElement>('#next-page')!;
+    const input = document.querySelector<HTMLInputElement>('#post-search')!;
+    const clear = document.querySelector<HTMLButtonElement>('#clear-search')!;
+    const status = document.querySelector<HTMLElement>('#search-status')!;
+    const pagination = document.querySelector<HTMLElement>('.pagination')!;
+    let searchMatches: Set<string> | null = null;
+    let searching = false;
+    function render() {
+      const matched = rows.filter(row => {
+        const url = row.querySelector<HTMLAnchorElement>('h3 a')!.pathname;
+        return (!activeTag || (JSON.parse(row.dataset.tags || '[]') as string[]).includes(activeTag)) && (!searchMatches || searchMatches.has(url));
+      });
+      const total = Math.max(1, Math.ceil(matched.length / size));
+      page = Math.min(page, total);
+      rows.forEach(row => row.hidden = true);
+      matched.slice((page - 1) * size, page * size).forEach(row => row.hidden = false);
+      filters.forEach(button => { const active = button.dataset.tag === activeTag; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+      const empty = document.querySelector<HTMLElement>('#empty-posts')!;
+      empty.hidden = searching || matched.length > 0;
+      empty.textContent = input.value.trim() ? '검색 조건에 맞는 글이 없습니다.' : '이 카테고리의 글은 아직 없습니다.';
+      pagination.hidden = searching || matched.length === 0;
+      if (!searching) {
+        status.hidden = !input.value.trim();
+        status.textContent = `검색 결과 ${matched.length}개`;
+      }
+      document.querySelector('#page-status')!.textContent = `${page} / ${total}`;
+      previous.disabled = page === 1; next.disabled = page === total;
+    }
+    filters.forEach(button => button.addEventListener('click', () => { activeTag = button.dataset.tag || ''; page = 1; const url = new URL(location.href); activeTag ? url.searchParams.set('tag', activeTag) : url.searchParams.delete('tag'); history.replaceState(null, '', url); render(); }));
+    previous.addEventListener('click', () => { page--; render(); });
+    next.addEventListener('click', () => { page++; render(); });
+    render();
+    interface SearchIndex { search: (query: string) => Promise<{ results: { data: () => Promise<{ url: string }> }[] }> }
+    let indexPromise: Promise<SearchIndex> | undefined;
+    let requestId = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    async function searchPosts() {
+      const id = ++requestId;
+      const query = input.value.trim();
+      clear.hidden = !input.value;
+      page = 1;
+      if (!query) { searching = false; searchMatches = null; render(); return; }
+      searching = true;
+      status.hidden = false;
+      status.textContent = '검색 중…';
+      document.querySelector<HTMLElement>('#empty-posts')!.hidden = true;
+      try {
+        let urls: string[];
+        if (import.meta.env.DEV) {
+          const content = JSON.parse(document.querySelector('#development-search')!.textContent || '[]') as { url: string; text: string }[];
+          const terms = query.toLocaleLowerCase().split(/\s+/);
+          urls = content.filter(post => terms.every(term => post.text.toLocaleLowerCase().includes(term))).map(post => post.url);
+        } else {
+          const path = '/pagefind/pagefind.js';
+          indexPromise ??= import(/* @vite-ignore */ path) as Promise<SearchIndex>;
+          const index = await indexPromise;
+          const result = await index.search(query);
+          urls = (await Promise.all(result.results.map(result => result.data()))).map(result => new URL(result.url, location.origin).pathname);
+        }
+        if (id !== requestId) return;
+        searchMatches = new Set(urls);
+        searching = false;
+        render();
+      } catch {
+        if (id !== requestId) return;
+        indexPromise = undefined;
+        searching = false;
+        searchMatches = new Set();
+        render();
+        status.hidden = false;
+        status.textContent = '검색을 불러오지 못했습니다. 잠시 후 다시 입력해 주세요.';
+      }
+    }
+    input.addEventListener('input', () => { ++requestId; clearTimeout(timer); clear.hidden = !input.value; timer = setTimeout(searchPosts, 180); });
+    document.querySelector('.posts-search')?.addEventListener('submit', event => { event.preventDefault(); clearTimeout(timer); searchPosts(); });
+    clear.addEventListener('click', () => { input.value = ''; clearTimeout(timer); searchPosts(); input.focus(); });
+    document.addEventListener('keydown', event => { const target = event.target as HTMLElement; if (event.key === '/' && !target.closest('input, textarea, [contenteditable="true"]')) { event.preventDefault(); input.focus(); } });
+  </script>
+</Base>

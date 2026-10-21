@@ -1,0 +1,26 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts, formatDate } from '../../lib/content';
+export async function getStaticPaths() { const posts = await getPosts(); return posts.map((post, index) => ({ params: { slug: post.id }, props: { post, newer: posts[index - 1], older: posts[index + 1] } })); }
+const { post, newer, older } = Astro.props;
+const { Content, headings } = await render(post);
+---
+<Base title={post.data.title} description={post.data.description} article>
+  <article data-pagefind-body>
+    <header class="article-heading"><a class="back-link" href="/posts/" data-pagefind-ignore>← 모든 글</a><div class="tags">{post.data.tags.map(tag => <a href={`/posts/?tag=${encodeURIComponent(tag)}`}>{tag}</a>)}</div><h1 data-pagefind-meta="title">{post.data.title}</h1><p class="article-description">{post.data.description}</p><div class="article-meta"><span>표상혁</span><span>·</span><time datetime={post.data.publishedAt.toISOString()}>{formatDate(post.data.publishedAt)}</time>{post.data.updatedAt && <span>수정 {formatDate(post.data.updatedAt)}</span>}</div></header>
+    {post.data.sample && <aside class="sample-notice" data-pagefind-ignore>이 글은 레이아웃과 글 작성 방식을 보여주기 위한 예시 콘텐츠입니다.</aside>}
+    <div class="article-layout"><div class="prose"><Content /></div>{headings.length > 0 && <aside class="toc" aria-label="글 목차" data-pagefind-ignore><span class="eyebrow">ON THIS PAGE</span><nav>{headings.filter(heading => heading.depth <= 3).map(heading => <a class:list={{ nested: heading.depth === 3 }} href={`#${heading.slug}`}>{heading.text}</a>)}</nav></aside>}</div>
+  </article>
+  <nav class="article-navigation" aria-label="다른 글">{older ? <a href={`/posts/${older.id}/`}><span>← 이전 글</span><strong>{older.data.title}</strong></a> : <div/>}{newer ? <a href={`/posts/${newer.id}/`}><span>다음 글 →</span><strong>{newer.data.title}</strong></a> : <div/>}</nav>
+  <script>
+    document.querySelectorAll<HTMLElement>('.prose pre').forEach(pre => {
+      const button = document.createElement('button'); button.className = 'copy-code'; button.textContent = '복사'; button.setAttribute('aria-label', '코드 복사');
+      button.addEventListener('click', async () => { try { await navigator.clipboard.writeText(pre.querySelector('code')?.textContent || ''); button.textContent = '복사됨'; } catch { button.textContent = '복사 실패'; } setTimeout(() => button.textContent = '복사', 1800); });
+      pre.append(button);
+    });
+    const tocLinks = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+    const observer = new IntersectionObserver(entries => { entries.forEach(entry => { if (entry.isIntersecting) { tocLinks.forEach(link => { const active = decodeURIComponent(link.hash.slice(1)) === entry.target.id; link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current'); }); } }); }, { rootMargin: '-10% 0px -65% 0px' });
+    document.querySelectorAll('.prose h2, .prose h3').forEach(heading => observer.observe(heading));
+  </script>
+</Base>

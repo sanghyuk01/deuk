@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import { Image } from 'astro:assets';
+import profile from '../assets/profile.png';
+import { resume } from '../data/resume';
+---
+<Base title="About" description="풀스택 개발자 표상혁을 소개합니다.">
+  <section class="about-intro about-with-photo">
+    <div>
+      <span class="eyebrow">HELLO, I'M</span>
+      <h2>{resume.name}<span class="accent">.</span></h2>
+      <p class="about-role">{resume.role}</p>
+      <p class="about-description">웹 서비스를 만들며 마주한 문제와<br/>해결 과정을 기록합니다.</p>
+      <div class="resume-actions">
+        <a class="text-link" href={`mailto:${resume.email}`}>이메일 보내기 ↗</a>
+        <a class="text-link" href="/resume.pdf" target="_blank" rel="noopener noreferrer">이력서 PDF 보기 ↗</a>
+      </div>
+    </div>
+    <Image class="profile-photo about-photo" src={profile} alt="표상혁 프로필 사진" width={147} height={189} widths={[112, 147, 294]} sizes="(max-width: 560px) 80px, 147px" format="webp" />
+  </section>
+  <nav class="resume-nav" aria-label="이력서 목차">
+    <a href="#introduction">소개</a><a href="#education">학력</a><a href="#training">교육·활동</a><a href="#certifications">자격증</a><a href="#awards">수상</a><a href="#contact">연락처</a>
+  </nav>
+  <section class="about-section" id="introduction" aria-labelledby="introduction-title">
+    <h2 id="introduction-title">소개 <span class="section-en">INTRODUCTION</span></h2>
+    <div><p>{resume.introduction}</p><p><strong>deuk</strong>은 developer와 sanghyuk을 합친 이름입니다. 기술 글과 개인 프로젝트를 한곳에 모으고, 직접 개발하고 운영하며 꾸준히 기록을 쌓아 갑니다.</p><a class="text-link" href="/projects/">개인 프로젝트 보기 ↗</a></div>
+  </section>
+  <section class="about-section" id="education" aria-labelledby="education-title">
+    <h2 id="education-title">학력 <span class="section-en">EDUCATION</span></h2>
+    <div class="resume-list">{resume.education.map(item => <article class="resume-entry"><span class="resume-date">{item.period}</span><h3>{item.title}</h3><p>{item.detail}</p>{item.note && <span class="resume-note">{item.note}</span>}</article>)}</div>
+  </section>
+  <section class="about-section" id="training" aria-labelledby="training-title">
+    <h2 id="training-title">교육·대외활동 <span class="section-en">TRAINING & ACTIVITIES</span></h2>
+    <div class="resume-list">{resume.training.map(item => <article class="resume-entry"><span class="resume-date">{item.period}</span><h3>{item.title}</h3><p>{item.organization}</p></article>)}</div>
+  </section>
+  <section class="about-section" id="certifications" aria-labelledby="certifications-title">
+    <h2 id="certifications-title">자격증 <span class="section-en">CERTIFICATIONS</span></h2>
+    <div class="resume-list">{resume.certifications.map(item => <article class="resume-entry resume-entry-compact"><div><h3>{item.title}</h3><p>{item.organization}</p></div><time class="resume-date" datetime={item.date.replaceAll('.', '-')}>{item.date}</time></article>)}</div>
+  </section>
+  <section class="about-section" id="awards" aria-labelledby="awards-title">
+    <h2 id="awards-title">수상 <span class="section-en">AWARDS</span></h2>
+    <div class="resume-list">{resume.awards.map(item => <article class="resume-entry resume-entry-compact"><div><h3>{item.title}</h3><p>{item.organization}</p></div><time class="resume-date" datetime={item.date.replaceAll('.', '-')}>{item.date}</time></article>)}</div>
+  </section>
+  <section class="about-section" aria-labelledby="military-title">
+    <h2 id="military-title">병역 <span class="section-en">MILITARY SERVICE</span></h2>
+    <div class="resume-entry"><span class="resume-date">{resume.military.period}</span><h3>{resume.military.title}</h3><p>{resume.military.detail}</p></div>
+  </section>
+  <section class="about-section" id="contact" aria-labelledby="contact-title">
+    <h2 id="contact-title">연락처 <span class="section-en">CONTACT</span></h2>
+    <div><span class="eyebrow">EMAIL</span><a class="resume-email" href={`mailto:${resume.email}`}>{resume.email} <span aria-hidden="true">↗</span></a></div>
+  </section>
+</Base>

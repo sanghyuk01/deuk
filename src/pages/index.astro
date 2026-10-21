@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+import { Image } from 'astro:assets';
+import profile from '../assets/profile.png';
+import PostList from '../components/PostList.astro';
+import { getPosts, getProjects } from '../lib/content';
+const posts = (await getPosts()).slice(0, 5);
+const projects = (await getProjects()).filter(project => project.data.featured).slice(0, 3);
+---
+<Base>
+  <section class="hero">
+    <div class="hero-profile">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="status-dot"></span> FULL-STACK DEVELOPER</div>
+        <h1 class="profile-name">표상혁 <span>풀스택 개발자</span></h1>
+        <p class="hero-description">웹 서비스를 만들며 마주한 문제와<br class="mobile-break"/> 해결 과정을 기록합니다.</p>
+        <a class="text-link profile-link" href="/about/">조금 더 알아보기 <span>↗</span></a>
+      </div>
+      <Image class="profile-photo home-photo" src={profile} alt="표상혁 프로필 사진" width={112} height={144} widths={[112, 224, 336]} sizes="(max-width: 560px) 80px, 112px" format="webp" loading="eager" />
+    </div>
+  </section>
+  <section class="home-section" aria-labelledby="recent-title">
+    <div class="section-heading"><h2 id="recent-title">최근 글 <span class="section-en">RECENT POSTS</span></h2><a class="text-link" href="/posts/">모든 글 보기 <span>↗</span></a></div>
+    <PostList posts={posts} />
+  </section>
+  <section class="home-section" aria-labelledby="projects-title">
+    <div class="section-heading"><h2 id="projects-title">사이드 프로젝트 <span class="section-en">SIDE PROJECT</span></h2><a class="text-link" href="/projects/">프로젝트 보기 <span>↗</span></a></div>
+    {projects.map((project, index) => <a class="project-feature" href={`/projects/${project.id}/`}>
+      <div class="project-art" aria-hidden="true"><span class="art-top">PERSONAL PROJECT / {project.data.year}</span><span class="art-logo">deuk<span>.</span></span><span class="art-bottom">A SPACE FOR THOUGHTS & CODE <span>↗</span></span></div>
+      <div class="project-feature-info"><span class="eyebrow">0{index + 1} / <span class="project-status">{project.data.status}</span></span><h3>{project.data.title} <span>↗</span></h3><p>{project.data.description}</p><div class="tags">{project.data.stack.map(item => <span>{item}</span>)}</div></div>
+    </a>)}
+  </section>
+</Base>

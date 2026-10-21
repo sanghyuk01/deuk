@@ -1,0 +1,10 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getProjects } from '../../lib/content';
+const projects = await getProjects();
+---
+<Base title="Project" description="직접 만들고 다듬어 가는 개인 프로젝트.">
+  <div class="page-heading project-heading"><span class="eyebrow">IDEAS INTO REALITY</span><h1>Project<span class="accent">.</span></h1></div>
+  <div class="section-heading"><h2>개인 프로젝트 <span class="section-en">{String(projects.length).padStart(2, '0')} PROJECTS</span></h2></div>
+  {projects.map(project => <a class="project-feature project-large" href={`/projects/${project.id}/`}><div class="project-art" aria-hidden="true"><span class="art-top">PERSONAL PROJECT / {project.data.year}</span><span class="art-logo">deuk<span>.</span></span><span class="art-bottom">A SPACE FOR THOUGHTS & CODE <span>↗</span></span></div><div class="project-feature-info"><span class="eyebrow project-status">{project.data.status} · {project.data.year}</span><h2>{project.data.title} <span>↗</span></h2><p>{project.data.description}</p><div class="tags">{project.data.stack.map(item => <span>{item}</span>)}</div><span class="text-link project-more">프로젝트 살펴보기 ↗</span></div></a>)}
+</Base>
