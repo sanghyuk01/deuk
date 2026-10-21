@@ -26,6 +26,7 @@ Cloudflare 대시보드에서 GitHub의 `sanghyuk01/deuk` 저장소를 연결합
 | 빌드 출력 디렉토리 | `dist` |
 | NODE_VERSION | `24` |
 | PNPM_VERSION | `11.25.0` |
+| SITE_URL | 실제 운영 주소 (Pages 프로젝트 생성 후 확정) |
 
 추후 GitHub Actions CI와 Cloudflare의 자체 빌드를 함께 구성하면 각각 실행됩니다. Pages Git 연동은 GitHub Actions의 성공을 기다리는 구조가 아닙니다. PR에서 CI 결과를 확인한 뒤 main에 병합하면 운영 배포를 관리하기 쉽습니다.
 
@@ -33,6 +34,6 @@ Pages 프로젝트 연결 전에는 자동 배포가 활성화되지 않습니�
 
 ## 운영 주소
 
-`astro.config.mjs`의 `site`는 현재 도메인 후보인 `https://deuk.kr`입니다. 첫 배포 후 실제 Pages 주소나 확정한 도메인으로 수정해야 canonical, RSS, 사이트맵 URL이 일치합니다.
+`astro.config.mjs`는 `SITE_URL` → `CF_PAGES_URL` → `https://deuk.kr` 순서로 운영 주소를 선택합니다. Pages에서는 `SITE_URL`에 실제 운영 주소를 지정해 canonical, RSS, 사이트맵 URL을 일치시킵니다. 나중에 커스텀 도메인을 연결하면 이 환경변수만 수정한 뒤 재배포합니다.
 
 원본 이력서 `public/resume.pdf`와 프로필 사진도 공개 저장소 및 배포 결과물에 포함됩니다.
