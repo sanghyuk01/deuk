@@ -64,9 +64,11 @@ draft: false
 
 프로필 원본은 `src/assets/profile.png`에 있습니다. HOME과 ABOUT에서 Astro Image로 최적화한 WebP 이미지를 표시합니다. ABOUT의 이력과 이메일은 제공된 이력서를 기준으로 반영했습니다. ABOUT 본문에는 상세 주소·생년월일·전화번호를 표시하지 않습니다. 사용자가 제공한 원본 이력서는 `public/resume.pdf`에 있으며, ABOUT의 PDF 보기 링크로 새 탭에서 열립니다. 원본 PDF에는 해당 개인정보가 포함되어 있으며 사이트 배포 시 함께 공개됩니다. GitHub 주소는 아직 제공되지 않았습니다. 웹폰트는 jsDelivr의 Pretendard Variable 1.3.9를 사용하며, 연결할 수 없을 때 시스템 폰트로 표시합니다.
 
-## 추후 배포
+## 배포
 
-GitHub 저장소는 `sanghyuk01/deuk`입니다. 현재는 소스 업로드만 진행하며 GitHub Actions와 Cloudflare 자동 배포는 연결하지 않습니다. 추후 배포 설정은 docs/deployment.md를 참고하세요. Cloudflare 정적 호스팅의 빌드 명령은 `pnpm build`, 출력 폴더는 `dist`입니다. 도메인을 확정하면 `site` 값을 실제 주소로 바꾸세요.
+운영 사이트는 [deuk-54k.pages.dev](https://deuk-54k.pages.dev)입니다. GitHub의 `sanghyuk01/deuk` 저장소와 Cloudflare Pages를 연결했으며, `main`에 push하면 타입 검사 → 정적 페이지 빌드 → 검색 색인 생성 → 배포가 자동 실행됩니다. 빌드 명령은 `pnpm build`, 출력 폴더는 `dist`입니다. 별도의 GitHub Actions는 사용하지 않습니다. 상세 설정은 [docs/deployment.md](docs/deployment.md)를 참고하세요.
+
+희망 도메인 `deuk.kr`은 아직 연결하지 않았습니다. 도메인을 연결하면 Cloudflare의 `SITE_URL` 환경변수를 실제 주소로 변경하고 재배포하세요.
 
 현재 공유 이미지는 SVG 초안입니다. 운영 배포 전에 소셜 서비스 호환성을 위해 1200×630 PNG/JPEG로 교체하세요. 게시일은 즉시 노출 기준이며 미래 날짜를 적는 것만으로 예약 발행되지 않습니다.
 
